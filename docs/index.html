@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Envoy — Environment setup, handled.</title>
+  <meta name="description" content="Copy the values you've already stored in ~/.env into every project's .env — automatically, accurately, and without touching secrets you haven't defined." />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --brown:   #2a1003;
+      --ink:     #1a1a1a;
+      --muted:   #6b6b6b;
+      --border:  #e2e2e2;
+      --surface: #f7f5f2;
+      --white:   #ffffff;
+      --accent:  #c84b00;
+      --code-bg: #f0ede8;
+      --radius:  6px;
+      --max:     780px;
+    }
+
+    html { font-size: 16px; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      color: var(--ink);
+      background: var(--white);
+      line-height: 1.65;
+    }
+
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* ── Layout ─────────────────────────────────── */
+
+    .container {
+      max-width: var(--max);
+      margin: 0 auto;
+      padding: 0 1.5rem;
+    }
+
+    section { padding: 4rem 0; }
+    section + section { border-top: 1px solid var(--border); }
+
+    /* ── Header ─────────────────────────────────── */
+
+    header {
+      background: var(--brown);
+      color: var(--white);
+      padding: 5rem 1.5rem 4rem;
+      text-align: center;
+    }
+
+    header img {
+      width: 96px;
+      margin-bottom: 1.5rem;
+      filter: brightness(0) invert(1);
+    }
+
+    header h1 {
+      font-size: clamp(2rem, 5vw, 3rem);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.5rem;
+    }
+
+    header p {
+      font-size: 1.15rem;
+      opacity: 0.75;
+      margin-bottom: 2rem;
+    }
+
+    .install {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.75rem;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: var(--radius);
+      padding: 0.6rem 1rem;
+      font-family: "SF Mono", "Fira Code", Menlo, monospace;
+      font-size: 0.95rem;
+      color: var(--white);
+    }
+
+    .install button {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: rgba(255,255,255,0.5);
+      font-size: 0.85rem;
+      padding: 0;
+      transition: color 0.15s;
+    }
+    .install button:hover { color: var(--white); }
+
+    .header-links {
+      margin-top: 2rem;
+      display: flex;
+      justify-content: center;
+      gap: 1.25rem;
+      flex-wrap: wrap;
+    }
+
+    .header-links a {
+      color: rgba(255,255,255,0.6);
+      font-size: 0.9rem;
+      transition: color 0.15s;
+    }
+    .header-links a:hover { color: var(--white); text-decoration: none; }
+
+    /* ── Section titles ──────────────────────────── */
+
+    h2 {
+      font-size: 1.35rem;
+      font-weight: 600;
+      margin-bottom: 1.25rem;
+      letter-spacing: -0.01em;
+    }
+
+    /* ── Features grid ───────────────────────────── */
+
+    .features {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 1.25rem;
+    }
+
+    .feature {
+      background: var(--surface);
+      border-radius: var(--radius);
+      padding: 1.25rem 1.25rem 1.1rem;
+    }
+
+    .feature h3 {
+      font-size: 0.9rem;
+      font-weight: 600;
+      margin-bottom: 0.35rem;
+    }
+
+    .feature p {
+      font-size: 0.875rem;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    /* ── How it works ────────────────────────────── */
+
+    .steps {
+      counter-reset: step;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .step {
+      display: flex;
+      gap: 1rem;
+      align-items: flex-start;
+    }
+
+    .step-num {
+      counter-increment: step;
+      flex-shrink: 0;
+      width: 1.75rem;
+      height: 1.75rem;
+      background: var(--brown);
+      color: var(--white);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      font-weight: 700;
+      margin-top: 0.1rem;
+    }
+
+    .step-num::before { content: counter(step); }
+
+    .step p { font-size: 0.925rem; }
+
+    /* ── Code ────────────────────────────────────── */
+
+    pre, code {
+      font-family: "SF Mono", "Fira Code", Menlo, monospace;
+      font-size: 0.875rem;
+    }
+
+    code {
+      background: var(--code-bg);
+      padding: 0.15em 0.4em;
+      border-radius: 3px;
+    }
+
+    pre {
+      background: var(--code-bg);
+      border-radius: var(--radius);
+      padding: 1.1rem 1.25rem;
+      overflow-x: auto;
+      line-height: 1.6;
+    }
+
+    pre code {
+      background: none;
+      padding: 0;
+    }
+
+    /* ── CLI table ───────────────────────────────── */
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+
+    th {
+      text-align: left;
+      padding: 0.5rem 0.75rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--muted);
+      border-bottom: 2px solid var(--border);
+    }
+
+    td {
+      padding: 0.55rem 0.75rem;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+
+    tr:last-child td { border-bottom: none; }
+
+    td:first-child code, td:nth-child(2) code {
+      background: var(--code-bg);
+    }
+
+    /* ── MCP block ───────────────────────────────── */
+
+    .mcp-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.25rem;
+    }
+
+    @media (max-width: 560px) {
+      .mcp-grid { grid-template-columns: 1fr; }
+    }
+
+    .mcp-card h3 {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--muted);
+      margin-bottom: 0.6rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    /* ── Roadmap callout ─────────────────────────── */
+
+    .callout {
+      background: var(--surface);
+      border-left: 3px solid var(--brown);
+      border-radius: var(--radius);
+      padding: 1.25rem 1.5rem;
+    }
+
+    .callout p { font-size: 0.925rem; }
+
+    /* ── Footer ──────────────────────────────────── */
+
+    footer {
+      background: var(--brown);
+      color: rgba(255,255,255,0.55);
+      padding: 2.5rem 1.5rem;
+      text-align: center;
+      font-size: 0.875rem;
+    }
+
+    footer a { color: rgba(255,255,255,0.8); }
+    footer a:hover { color: var(--white); }
+
+    footer .studio {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--white);
+      display: block;
+      margin-bottom: 0.35rem;
+    }
+
+    footer .links {
+      display: flex;
+      justify-content: center;
+      gap: 1.25rem;
+      margin-top: 1rem;
+      flex-wrap: wrap;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── Header ──────────────────────────────────────── -->
+<header>
+  <div class="container">
+    <img src="../assets/logo-outline.svg" alt="Envoy logo" />
+    <h1>Envoy</h1>
+    <p>Environment setup, handled.</p>
+    <div class="install">
+      <span>npx @allons-y/envoy</span>
+      <button onclick="navigator.clipboard.writeText('npx @allons-y/envoy')" title="Copy">copy</button>
+    </div>
+    <nav class="header-links">
+      <a href="https://github.com/castastrophe/envoy">GitHub</a>
+      <a href="https://www.npmjs.com/package/@allons-y/envoy">npm</a>
+      <a href="https://github.com/castastrophe/envoy/discussions/12">Roadmap</a>
+      <a href="https://github.com/castastrophe/envoy/issues">Issues</a>
+    </nav>
+  </div>
+</header>
+
+<!-- ── The problem ─────────────────────────────────── -->
+<section>
+  <div class="container">
+    <h2>The problem</h2>
+    <p>
+      Every project starts the same way: copy <code>.env.example</code> → <code>.env</code>, then hunt through
+      Notion, 1Password, Slack history, or your own memory for the actual values.
+      In a monorepo it's worse — five packages, five example files, the same ritual repeated for each one.
+    </p>
+    <br />
+    <p>
+      If you keep a root <code>~/.env</code> with your real values,
+      <strong>Envoy bridges the gap</strong>. It reads your <code>.env.example</code> as a template,
+      pulls matching keys from <code>~/.env</code>, and writes a complete <code>.env</code>
+      alongside it — preserving every comment and blank line in the process.
+    </p>
+  </div>
+</section>
+
+<!-- ── Features ────────────────────────────────────── -->
+<section>
+  <div class="container">
+    <h2>Features</h2>
+    <div class="features">
+      <div class="feature">
+        <h3>Template-driven</h3>
+        <p><code>.env.example</code> defines the shape; <code>~/.env</code> supplies the values.</p>
+      </div>
+      <div class="feature">
+        <h3>Safe by default</h3>
+        <p>Skips any <code>.env</code> that already exists. Use <code>--force</code> to overwrite.</p>
+      </div>
+      <div class="feature">
+        <h3>Security-first</h3>
+        <p>Refuses to write secrets into a git-tracked file. Warns if <code>.env</code> isn't gitignored.</p>
+      </div>
+      <div class="feature">
+        <h3>Monorepo-aware</h3>
+        <p>Recursively finds every <code>.env.example</code> under your project root, skipping <code>node_modules</code>.</p>
+      </div>
+      <div class="feature">
+        <h3>Non-destructive</h3>
+        <p>Keys absent from <code>~/.env</code> fall back to the example value — nothing is lost.</p>
+      </div>
+      <div class="feature">
+        <h3>Preview mode</h3>
+        <p><code>--dry-run</code> shows exactly what would be written without touching the filesystem.</p>
+      </div>
+      <div class="feature">
+        <h3>MCP tool</h3>
+        <p>Expose <code>copy_env</code> to any MCP-compatible host — Claude Desktop, Claude Code, and more.</p>
+      </div>
+      <div class="feature">
+        <h3>No magic</h3>
+        <p>No network calls. No config files. No global state. Small, readable, fully tested.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── How it works ────────────────────────────────── -->
+<section>
+  <div class="container">
+    <h2>How it works</h2>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num"></div>
+        <p>Scans your directory recursively for <code>.env.example</code> files, ignoring <code>node_modules</code>.</p>
+      </div>
+      <div class="step">
+        <div class="step-num"></div>
+        <p>For each one, checks whether a <code>.env</code> already exists alongside it — skips unless <code>--force</code>.</p>
+      </div>
+      <div class="step">
+        <div class="step-num"></div>
+        <p>Runs git safety checks — blocks if <code>.env</code> is tracked; warns if it isn't gitignored.</p>
+      </div>
+      <div class="step">
+        <div class="step-num"></div>
+        <p>Reads <code>~/.env</code> (or <code>--root</code>) into a key → value map.</p>
+      </div>
+      <div class="step">
+        <div class="step-num"></div>
+        <p>Walks every line in <code>.env.example</code>: comments and blanks pass through unchanged; matching keys get your real value substituted; missing keys fall back to the example value.</p>
+      </div>
+      <div class="step">
+        <div class="step-num"></div>
+        <p>Writes the result to <code>.env</code> next to the example file.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── CLI ─────────────────────────────────────────── -->
+<section>
+  <div class="container">
+    <h2>CLI reference</h2>
+    <p style="margin-bottom:1.25rem">Run in any project root. Envoy finds every <code>.env.example</code> recursively and creates the corresponding <code>.env</code>.</p>
+    <pre><code>envoy [options]</code></pre>
+    <br />
+    <table>
+      <thead>
+        <tr>
+          <th>Flag</th>
+          <th>Alias</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>--force</code></td>
+          <td><code>-f</code></td>
+          <td>Overwrite existing <code>.env</code> files</td>
+        </tr>
+        <tr>
+          <td><code>--dry-run</code></td>
+          <td><code>-n</code></td>
+          <td>Preview changes without writing any files</td>
+        </tr>
+        <tr>
+          <td><code>--root &lt;path&gt;</code></td>
+          <td><code>-r</code></td>
+          <td>Custom root env file (default: <code>~/.env</code>)</td>
+        </tr>
+        <tr>
+          <td><code>--dir &lt;path&gt;</code></td>
+          <td><code>-d</code></td>
+          <td>Directory to scan (default: current directory)</td>
+        </tr>
+        <tr>
+          <td><code>--skip-audit</code></td>
+          <td><code>-s</code></td>
+          <td>Skip the git safety checks</td>
+        </tr>
+        <tr>
+          <td><code>--help</code></td>
+          <td><code>-h</code></td>
+          <td>Show help</td>
+        </tr>
+      </tbody>
+    </table>
+    <br />
+    <pre><code># Preview what would be created, without writing anything
+envoy --dry-run
+
+# Regenerate .env files from scratch
+envoy --force
+
+# Use a team-shared env file instead of ~/.env
+envoy --root ./secrets/.env.shared
+
+# Scan a specific subdirectory
+envoy --dir packages/api</code></pre>
+  </div>
+</section>
+
+<!-- ── MCP ─────────────────────────────────────────── -->
+<section>
+  <div class="container">
+    <h2>MCP tool</h2>
+    <p style="margin-bottom:1.5rem">
+      Envoy ships an MCP server so AI tools can call <code>copy_env</code> directly.
+      The tool accepts the same options as the CLI: <code>dir</code>, <code>force</code>,
+      <code>dry_run</code>, <code>root_env_path</code>, and <code>skip_audit</code>.
+    </p>
+    <div class="mcp-grid">
+      <div class="mcp-card">
+        <h3>Claude Desktop</h3>
+        <pre><code>{
+  "mcpServers": {
+    "envoy": {
+      "command": "npx",
+      "args": ["-y", "@allons-y/envoy/mcp"]
+    }
+  }
+}</code></pre>
+      </div>
+      <div class="mcp-card">
+        <h3>Claude Code</h3>
+        <pre><code>{
+  "mcpServers": {
+    "envoy": {
+      "command": "npx",
+      "args": ["-y", "@allons-y/envoy/mcp"]
+    }
+  }
+}</code></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Roadmap ─────────────────────────────────────── -->
+<section>
+  <div class="container">
+    <h2>What's next</h2>
+    <div class="callout">
+      <p>
+        Envoy is intentionally minimal today — it does one thing and does it well.
+        The bigger vision is to make it the single tool that bridges your personal secrets and every
+        project you work in, without friction or foot-guns. That means smarter value handling,
+        better control over what gets scanned and where, and tighter integration with the safety
+        checks developers already rely on.
+      </p>
+      <br />
+      <p>
+        Follow along or share your ideas in the
+        <a href="https://github.com/castastrophe/envoy/discussions/12">roadmap discussion</a>.
+      </p>
+    </div>
+  </div>
+</section>
+
+<!-- ── Footer ──────────────────────────────────────── -->
+<footer>
+  <div class="container">
+    <a class="studio" href="https://allons-y.llc">Allons-y Studio</a>
+    <span>Built by <a href="https://github.com/castastrophe">Cassondra Roberts</a>. Released under the <a href="https://github.com/castastrophe/envoy/blob/main/LICENSE">Apache 2.0</a> license.</span>
+    <nav class="links">
+      <a href="https://github.com/castastrophe/envoy">GitHub</a>
+      <a href="https://www.npmjs.com/package/@allons-y/envoy">npm</a>
+      <a href="https://github.com/castastrophe/envoy/discussions/12">Roadmap</a>
+      <a href="https://github.com/castastrophe/envoy/issues">Issues</a>
+      <a href="https://github.com/castastrophe/envoy/blob/main/CONTRIBUTING.md">Contributing</a>
+    </nav>
+  </div>
+</footer>
+
+</body>
+</html>
