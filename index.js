@@ -188,3 +188,201 @@ export function copyEnv(dir = process.cwd(), options = {}) {
     processExampleFile(examplePath, rootEnv, options),
   );
 }
+
+// ─── check ────────────────────────────────────────────────────────────────
+
+/**
+ * Patterns that mark a value as a non-secret placeholder rather than a real
+ * credential. Matched against the value with surrounding quotes stripped.
+ */
+const PLACEHOLDER_PATTERNS = [
+  /^(x+|\.+|-+|\*+|0+)$/i, // xxxx, ...., ----, ****, 0000
+  /^<.*>$/, // <your-api-key>
+  /^\{\{.*\}\}$/, // {{ template }}
+  /^(your|my|some|the|a|an)[-_ ]/i, // your_key, my-token
+  /change[-_ ]?me/i, // changeme, change-me
+  /\b(placeholder|example|dummy|sample|todo|fixme|redacted|none)\b/i,
+  /^sk_test_/, // Stripe test keys are safe to commit
+  /[-_]here$/i, // value_here
+];
+
+/**
+ * Decide whether a value is a placeholder/non-secret. Values that are short,
+ * blank, or match a known placeholder shape are treated as safe — this is what
+ * keeps `--check` from flagging the example values that belong in `.env.example`.
+ *
+ * @param {string} value
+ * @returns {boolean}
+ */
+export function isPlaceholderValue(value) {
+  const v = value.trim().replace(/^["']|["']$/g, "");
+  if (v.length < 8) return true; // too short / low-entropy to be a real secret
+  return PLACEHOLDER_PATTERNS.some((re) => re.test(v));
+}
+
+/**
+ * Whole words (between `_`/`-` separators) that mark a key as holding a secret.
+ * Matching on delimited tokens — rather than a substring — flags `SECRET_KEY_BASE`
+ * and `AWS_ACCESS_KEY_ID` while leaving `KEYBOARD_LAYOUT` and `MONKEY_BUSINESS`
+ * alone.
+ */
+const SECRET_KEY_WORDS = new Set([
+  "KEY", "KEYS", "APIKEY", "APIKEYS",
+  "SECRET", "SECRETS",
+  "TOKEN", "TOKENS",
+  "PASSWORD", "PASSWD", "PASSPHRASE", "PWD",
+  "CREDENTIAL", "CREDENTIALS",
+  "PRIVATE", "AUTH",
+]);
+
+/**
+ * Whether a key name looks like it should hold a secret (e.g. `*_KEY`,
+ * `*_SECRET`, `*_TOKEN`, `*_PASSWORD`, `APIKEY`, `SECRET_KEY_BASE`).
+ *
+ * @param {string} key
+ * @returns {boolean}
+ */
+export function isSecretShapedKey(key) {
+  return key
+    .toUpperCase()
+    .split(/[_-]+/)
+    .some((token) => SECRET_KEY_WORDS.has(token));
+}
+
+/**
+ * Whether a path is an env file (`.env`, `.env.example`, `.env.local`, …).
+ * The secret-shaped heuristic only applies to these.
+ *
+ * @param {string} filePath
+ * @returns {boolean}
+ */
+function isEnvFile(filePath) {
+  const base = path.basename(filePath);
+  return base === ".env" || base.startsWith(".env.");
+}
+
+/**
+ * Determine which files `--check` should scan. Prefers files staged for commit
+ * (true pre-commit semantics); when nothing is staged, falls back to every
+ * tracked file so it doubles as an ad-hoc audit. Returns an empty array when
+ * git is unavailable or `dir` is outside a repository. Paths are absolute.
+ *
+ * @param {string} dir
+ * @returns {string[]}
+ */
+export function filesToScan(dir) {
+  const git = (/** @type {string[]} */ args) =>
+    spawnSync("git", args, { cwd: dir, encoding: "utf8" });
+
+  const top = git(["rev-parse", "--show-toplevel"]);
+  if (top.status !== 0) return [];
+  const repoRoot = top.stdout.trim();
+
+  const toPaths = (/** @type {string} */ out) =>
+    out
+      .split("\n")
+      .map((f) => f.trim())
+      .filter(Boolean)
+      .map((f) => path.resolve(repoRoot, f));
+
+  // Both commands emit paths relative to the repository root.
+  const staged = git(["diff", "--cached", "--name-only", "--diff-filter=ACM"]);
+  const stagedFiles = staged.status === 0 ? toPaths(staged.stdout) : [];
+  if (stagedFiles.length > 0) return stagedFiles;
+
+  const tracked = git(["ls-files", "--full-name"]);
+  return tracked.status === 0 ? toPaths(tracked.stdout) : [];
+}
+
+/**
+ * @typedef {'known-secret' | 'secret-shaped'} CheckFindingKind
+ *   - `known-secret`: the value matches one defined in the root `~/.env`
+ *   - `secret-shaped`: the key looks secret and holds a non-placeholder value
+ *
+ * @typedef {Object} CheckFinding
+ * @property {string}           file  Absolute path to the offending file
+ * @property {string}           key   Env key associated with the match
+ * @property {CheckFindingKind} kind
+ */
+
+/**
+ * Scan a single file's contents for leaked secrets. Reports at most one finding
+ * per key (a known-secret match takes precedence over the secret-shaped
+ * heuristic). Pure — does no I/O — so it can be tested in isolation.
+ *
+ * @param {string}              filePath
+ * @param {string}              content
+ * @param {Map<string, string>} secretValues  Map of secret value → its root key
+ * @returns {CheckFinding[]}
+ */
+export function scanContent(filePath, content, secretValues) {
+  /** @type {CheckFinding[]} */
+  const findings = [];
+  const seen = new Set();
+  const add = (/** @type {string} */ key, /** @type {CheckFindingKind} */ kind) => {
+    if (seen.has(key)) return;
+    seen.add(key);
+    findings.push({ file: filePath, key, kind });
+  };
+
+  // 1. A local secret value appearing verbatim in a committed file.
+  for (const [value, key] of secretValues) {
+    if (content.includes(value)) add(key, "known-secret");
+  }
+
+  // 2. Secret-shaped env assignments with a real-looking value. Only meaningful
+  //    for env files, where `KEY=value` lines carry intent.
+  if (isEnvFile(filePath)) {
+    for (const line of content.split("\n")) {
+      const parsed = parseLine(line);
+      if (parsed && isSecretShapedKey(parsed.key) && !isPlaceholderValue(parsed.value)) {
+        add(parsed.key, "secret-shaped");
+      }
+    }
+  }
+
+  return findings;
+}
+
+/**
+ * @typedef {Object} CheckEnvOptions
+ * @property {string}   [rootEnvPath] Path to the root `.env` (default: `~/.env`)
+ * @property {string[]} [files]       Override the scanned file list (default: git staged/tracked)
+ */
+
+/**
+ * Validate that no real secrets have leaked into committed files. Read-only:
+ * never writes or modifies anything. Cross-references file contents against the
+ * values in the root `~/.env`, and — even when no root env exists — flags
+ * secret-shaped keys holding non-placeholder values.
+ *
+ * @param {string}          [dir]     Directory to scan (default: `process.cwd()`)
+ * @param {CheckEnvOptions} [options]
+ * @returns {CheckFinding[]}
+ */
+export function checkEnv(dir = process.cwd(), options = {}) {
+  const rootEnvPath = options.rootEnvPath ?? path.join(os.homedir(), ".env");
+  const rootEnv = parseEnvFile(rootEnvPath);
+
+  /** @type {Map<string, string>} value → key, for real (non-placeholder) secrets */
+  const secretValues = new Map();
+  for (const [key, value] of rootEnv) {
+    if (!isPlaceholderValue(value)) secretValues.set(value, key);
+  }
+
+  const files = options.files ?? filesToScan(dir);
+
+  /** @type {CheckFinding[]} */
+  const findings = [];
+  for (const file of files) {
+    let content;
+    try {
+      content = fs.readFileSync(file, "utf8");
+    } catch {
+      continue; // deleted, unreadable, or binary — nothing to scan
+    }
+    findings.push(...scanContent(file, content, secretValues));
+  }
+
+  return findings;
+}

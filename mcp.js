@@ -5,7 +5,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
 
-import { copyEnv } from "./index.js";
+import { checkEnv, copyEnv } from "./index.js";
 import packageJSON from "./package.json" with { type: 'json' };
 
 /**
@@ -44,6 +44,26 @@ export function formatResults(results) {
     .join("\n");
 }
 
+/**
+ * Format an array of CheckFindings into a human-readable string.
+ *
+ * @param {import('./index.js').CheckFinding[]} findings
+ * @returns {string}
+ */
+export function formatCheckFindings(findings) {
+  if (findings.length === 0) return "No leaked secrets detected.";
+
+  return findings
+    .map((f) => {
+      const reason =
+        f.kind === "known-secret"
+          ? `${f.key} contains a value matching your local ~/.env`
+          : `${f.key} looks like a secret and holds a non-placeholder value`;
+      return `Possible secret detected in ${f.file}: ${reason}`;
+    })
+    .join("\n");
+}
+
 const server = new McpServer({
   name: packageJSON.name,
   version: packageJSON.version,
@@ -67,6 +87,43 @@ export function copyEnvToolHandler({ dir, force, dry_run, root_env_path, skip_au
     content: [{ type: "text", text: formatResults(results) }],
   };
 }
+
+/**
+ * MCP tool handler for check_env. Extracted for testability.
+ *
+ * @param {{ dir?: string, root_env_path?: string }} [args]
+ * @returns {{ content: Array<{ type: string, text: string }> }}
+ */
+export function checkEnvToolHandler({ dir, root_env_path } = {}) {
+  const findings = checkEnv(dir, { rootEnvPath: root_env_path });
+
+  return {
+    content: [{ type: "text", text: formatCheckFindings(findings) }],
+  };
+}
+
+server.registerTool(
+  "check_env",
+  {
+    description:
+      "Validate, read-only, that no real secrets have leaked into committed files. " +
+      "Scans files staged for commit (or all tracked files when nothing is staged), " +
+      "cross-references their contents against the values in the root .env, and flags any " +
+      "verbatim matches. Even without a root .env, flags secret-shaped keys " +
+      "(*_KEY, *_SECRET, *_TOKEN, *_PASSWORD) holding non-placeholder values. Writes nothing.",
+    inputSchema: {
+      dir: z
+        .string()
+        .optional()
+        .describe("Directory to scan (default: current working directory)"),
+      root_env_path: z
+        .string()
+        .optional()
+        .describe("Path to the root .env file to source secret values from (default: ~/.env)"),
+    },
+  },
+  checkEnvToolHandler,
+);
 
 server.registerTool(
   "copy_env",

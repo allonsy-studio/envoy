@@ -7,7 +7,7 @@ import chalk from "chalk";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 
-import { copyEnv } from "./index.js";
+import { checkEnv, copyEnv } from "./index.js";
 
 const argv = yargs(hideBin(process.argv))
   .scriptName("envoy")
@@ -40,10 +40,43 @@ const argv = yargs(hideBin(process.argv))
     description: "Skip the gitignore and git-tracking safety checks",
     default: false,
   })
+  .option("check", {
+    alias: "c",
+    type: "boolean",
+    description:
+      "Validate that no local ~/.env secrets appear in committed files (read-only; pre-commit friendly)",
+    default: false,
+  })
   .help()
   .parseSync();
 
 const dir = argv.dir ? path.resolve(/** @type {string} */ (argv.dir)) : process.cwd();
+
+/** Format an absolute path relative to the cwd for friendlier output. */
+const rel = (/** @type {string} */ p) => path.relative(process.cwd(), p) || p;
+
+// ─── --check: read-only secret validation ──────────────────────────────────
+if (argv.check) {
+  const findings = checkEnv(dir, {
+    rootEnvPath: /** @type {string | undefined} */ (argv.root),
+  });
+
+  // Exit zero silently when nothing is wrong — CI/pre-commit friendly.
+  if (findings.length === 0) process.exit(0);
+
+  for (const finding of findings) {
+    const reason =
+      finding.kind === "known-secret"
+        ? `${finding.key} contains a value matching your local ~/.env`
+        : `${finding.key} looks like a secret and holds a non-placeholder value`;
+    console.error(
+      chalk.yellow(`⚠ Possible secret detected in ${rel(finding.file)}:\n  ${reason}`),
+    );
+  }
+
+  console.error(chalk.dim("\nResolve these before committing, or use a placeholder value."));
+  process.exit(1);
+}
 
 const results = copyEnv(dir, {
   force: /** @type {boolean} */ (argv.force),

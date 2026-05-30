@@ -45,27 +45,27 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@allons-y/envoy@workspace:."
   dependencies:
-    "@commitlint/cli": "npm:^20.0.0"
-    "@commitlint/config-conventional": "npm:^20.0.0"
-    "@modelcontextprotocol/sdk": "npm:^1.28.0"
-    "@semantic-release/changelog": "npm:^6.0.0"
+    "@commitlint/cli": "npm:^20.5.3"
+    "@commitlint/config-conventional": "npm:^20.5.3"
+    "@modelcontextprotocol/sdk": "npm:^1.29.0"
+    "@semantic-release/changelog": "npm:^6.0.3"
     "@semantic-release/commit-analyzer": "npm:^13.0.1"
-    "@semantic-release/git": "npm:^10.0.0"
-    "@semantic-release/github": "npm:^12.0.0"
-    "@semantic-release/npm": "npm:^13.0.0"
-    "@semantic-release/release-notes-generator": "npm:^14.1.0"
+    "@semantic-release/git": "npm:^10.0.1"
+    "@semantic-release/github": "npm:^12.0.8"
+    "@semantic-release/npm": "npm:^13.1.5"
+    "@semantic-release/release-notes-generator": "npm:^14.1.1"
     ava: "npm:^7.0.0"
     c8: "npm:^11.0.0"
     chalk: "npm:^5.6.2"
-    eslint: "npm:^10.1.0"
+    eslint: "npm:^10.4.1"
     husky: "npm:^9.1.7"
-    lint-staged: "npm:^16.3.3"
+    lint-staged: "npm:^16.4.0"
     pinst: "npm:^3.0.0"
-    prettier: "npm:^3.8.1"
+    prettier: "npm:^3.8.3"
     prettier-package-json: "npm:^2.8.0"
-    semantic-release: "npm:^25.0.0"
+    semantic-release: "npm:^25.0.3"
     yargs: "npm:^18.0.0"
-    zod: "npm:^4.3.6"
+    zod: "npm:^4.4.3"
   bin:
     envoy: cli.js
     envoy-mcp: mcp.js
@@ -104,7 +104,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@commitlint/cli@npm:^20.0.0":
+"@commitlint/cli@npm:^20.5.3":
   version: 20.5.3
   resolution: "@commitlint/cli@npm:20.5.3"
   dependencies:
@@ -121,7 +121,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@commitlint/config-conventional@npm:^20.0.0":
+"@commitlint/config-conventional@npm:^20.5.3":
   version: 20.5.3
   resolution: "@commitlint/config-conventional@npm:20.5.3"
   dependencies:
@@ -338,12 +338,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@eslint/config-helpers@npm:^0.5.5":
-  version: 0.5.5
-  resolution: "@eslint/config-helpers@npm:0.5.5"
+"@eslint/config-helpers@npm:^0.6.0":
+  version: 0.6.0
+  resolution: "@eslint/config-helpers@npm:0.6.0"
   dependencies:
     "@eslint/core": "npm:^1.2.1"
-  checksum: 10c0/18889c062cd6bdbd4cd92fe57318c44465ea66184aa0ba204a4420712c66764c64093a7905b6c2ffde23e51b268ca2cec1a39c605d336bebf17ee1ba4f0fc0bb
+  checksum: 10c0/f9af20e8b60b0ba27edb74b8eb40c0c5d51a9bf9baf9e053bb57833a87cb0a1c49b4dfaad88fc24d49c907ad1324c8a0b668684fa9c321351dac4bc9155ec10a
   languageName: node
   linkType: hard
 
@@ -363,13 +363,13 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@eslint/plugin-kit@npm:^0.7.1":
-  version: 0.7.1
-  resolution: "@eslint/plugin-kit@npm:0.7.1"
+"@eslint/plugin-kit@npm:^0.7.2":
+  version: 0.7.2
+  resolution: "@eslint/plugin-kit@npm:0.7.2"
   dependencies:
     "@eslint/core": "npm:^1.2.1"
     levn: "npm:^0.4.1"
-  checksum: 10c0/335b0c1c46fd906cb50bd5ce442b9cee18dc44342ce35c718ba4a63d1aa51d2797f16a517b2f4fe371ccd777b6862fafb2dc8195e00e69197ef4cb17ab32c01b
+  checksum: 10c0/aafba08077bcd6d7dde6c2e21db18086046a88f914f29971a84cac9ad2d48952ded1b293e665e523805297eff756522dafa16f0062195e2c7143dcd1d47d11ed
   languageName: node
   linkType: hard
 
@@ -494,7 +494,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@modelcontextprotocol/sdk@npm:^1.28.0":
+"@modelcontextprotocol/sdk@npm:^1.29.0":
   version: 1.29.0
   resolution: "@modelcontextprotocol/sdk@npm:1.29.0"
   dependencies:
@@ -924,7 +924,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@semantic-release/changelog@npm:^6.0.0":
+"@semantic-release/changelog@npm:^6.0.3":
   version: 6.0.3
   resolution: "@semantic-release/changelog@npm:6.0.3"
   dependencies:
@@ -970,7 +970,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@semantic-release/git@npm:^10.0.0":
+"@semantic-release/git@npm:^10.0.1":
   version: 10.0.1
   resolution: "@semantic-release/git@npm:10.0.1"
   dependencies:
@@ -1015,7 +1015,34 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@semantic-release/npm@npm:^13.0.0, @semantic-release/npm@npm:^13.1.1":
+"@semantic-release/github@npm:^12.0.8":
+  version: 12.0.8
+  resolution: "@semantic-release/github@npm:12.0.8"
+  dependencies:
+    "@octokit/core": "npm:^7.0.0"
+    "@octokit/plugin-paginate-rest": "npm:^14.0.0"
+    "@octokit/plugin-retry": "npm:^8.0.0"
+    "@octokit/plugin-throttling": "npm:^11.0.0"
+    "@semantic-release/error": "npm:^4.0.0"
+    aggregate-error: "npm:^5.0.0"
+    debug: "npm:^4.3.4"
+    dir-glob: "npm:^3.0.1"
+    http-proxy-agent: "npm:^9.0.0"
+    https-proxy-agent: "npm:^9.0.0"
+    issue-parser: "npm:^7.0.0"
+    lodash-es: "npm:^4.17.21"
+    mime: "npm:^4.0.0"
+    p-filter: "npm:^4.0.0"
+    tinyglobby: "npm:^0.2.14"
+    undici: "npm:^7.0.0"
+    url-join: "npm:^5.0.0"
+  peerDependencies:
+    semantic-release: ">=24.1.0"
+  checksum: 10c0/d2ad0385f840ea690a847b9c52dd80ef5ff528f6ec7d07b97448dbc522987e2effba9c0b5bc057fe989dc7c90735b0aaeacbdc4580cbdc03c4e30ffbe5da56c9
+  languageName: node
+  linkType: hard
+
+"@semantic-release/npm@npm:^13.1.1, @semantic-release/npm@npm:^13.1.5":
   version: 13.1.5
   resolution: "@semantic-release/npm@npm:13.1.5"
   dependencies:
@@ -1057,6 +1084,24 @@ __metadata:
   peerDependencies:
     semantic-release: ">=20.1.0"
   checksum: 10c0/6b6bc729274d2f67712a982daee6eb931fcd36377f4bd184ad8c3fcd204a77e77c500f571df1950264a0c43c1d3ce1ec9311a0a2ab90b0ab9fc7b070cd88c495
+  languageName: node
+  linkType: hard
+
+"@semantic-release/release-notes-generator@npm:^14.1.1":
+  version: 14.1.1
+  resolution: "@semantic-release/release-notes-generator@npm:14.1.1"
+  dependencies:
+    conventional-changelog-angular: "npm:^8.0.0"
+    conventional-changelog-writer: "npm:^8.0.0"
+    conventional-commits-filter: "npm:^5.0.0"
+    conventional-commits-parser: "npm:^6.0.0"
+    debug: "npm:^4.0.0"
+    import-from-esm: "npm:^2.0.0"
+    lodash-es: "npm:^4.17.21"
+    read-package-up: "npm:^11.0.0"
+  peerDependencies:
+    semantic-release: ">=20.1.0"
+  checksum: 10c0/2ae962eb8d146e346b5afc4833f61edd0a59db5d92d0ccf4aa6a6bd2e53440c562a3edb876fb3c003d1fc3fa3e62e4b76fbc369e392b8b98eeb9b858edf7527a
   languageName: node
   linkType: hard
 
@@ -1293,6 +1338,13 @@ __metadata:
   bin:
     acorn: bin/acorn
   checksum: 10c0/c9c52697227661b68d0debaf972222d4f622aa06b185824164e153438afa7b08273432ca43ea792cadb24dada1d46f6f6bb1ef8de9956979288cc1b96bf9914e
+  languageName: node
+  linkType: hard
+
+"agent-base@npm:9.0.0":
+  version: 9.0.0
+  resolution: "agent-base@npm:9.0.0"
+  checksum: 10c0/0274cd9a2a0ee78e3fbe0e80e7e0c41df27102466f7f7b3a67c045bb4c00fc517ce0496de3045b55f5eeec1a0e77d9d0a9b9320b0362bfe61e0c9e6d7ebaee76
   languageName: node
   linkType: hard
 
@@ -2537,16 +2589,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"eslint@npm:^10.1.0":
-  version: 10.2.1
-  resolution: "eslint@npm:10.2.1"
+"eslint@npm:^10.4.1":
+  version: 10.4.1
+  resolution: "eslint@npm:10.4.1"
   dependencies:
     "@eslint-community/eslint-utils": "npm:^4.8.0"
     "@eslint-community/regexpp": "npm:^4.12.2"
     "@eslint/config-array": "npm:^0.23.5"
-    "@eslint/config-helpers": "npm:^0.5.5"
+    "@eslint/config-helpers": "npm:^0.6.0"
     "@eslint/core": "npm:^1.2.1"
-    "@eslint/plugin-kit": "npm:^0.7.1"
+    "@eslint/plugin-kit": "npm:^0.7.2"
     "@humanfs/node": "npm:^0.16.6"
     "@humanwhocodes/module-importer": "npm:^1.0.1"
     "@humanwhocodes/retry": "npm:^0.4.2"
@@ -2578,7 +2630,7 @@ __metadata:
       optional: true
   bin:
     eslint: bin/eslint.js
-  checksum: 10c0/176795a3794a785502fa5cd14a9609264c2be5405552d20fed3e499bd465c29639c91ac44619ae66787b0fb7494e72d112550a2136a735d92a26bc6a7af4915c
+  checksum: 10c0/c5e6bb5158fb0d62f090c8e2671de5c98283bbb37a58b6d871bada63af3018e683483c96c1a92272fedc8f4e5279a273a0451acf0da67c487406639daa05aedb
   languageName: node
   linkType: hard
 
@@ -3379,6 +3431,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"http-proxy-agent@npm:^9.0.0":
+  version: 9.0.0
+  resolution: "http-proxy-agent@npm:9.0.0"
+  dependencies:
+    agent-base: "npm:9.0.0"
+    debug: "npm:^4.3.4"
+  checksum: 10c0/9ffd12ee9c827c0ec681c5066f0a1739c0e5b948c54ced9fc53313861b757f3bb3a2bdab2b8089d47757c1246aaea13bf4b4c304ef7b1e9f9d4bfe5dc87344e2
+  languageName: node
+  linkType: hard
+
 "https-proxy-agent@npm:^7.0.0, https-proxy-agent@npm:^7.0.1, https-proxy-agent@npm:^7.0.5":
   version: 7.0.6
   resolution: "https-proxy-agent@npm:7.0.6"
@@ -3386,6 +3448,16 @@ __metadata:
     agent-base: "npm:^7.1.2"
     debug: "npm:4"
   checksum: 10c0/f729219bc735edb621fa30e6e84e60ee5d00802b8247aac0d7b79b0bd6d4b3294737a337b93b86a0bd9e68099d031858a39260c976dc14cdbba238ba1f8779ac
+  languageName: node
+  linkType: hard
+
+"https-proxy-agent@npm:^9.0.0":
+  version: 9.0.0
+  resolution: "https-proxy-agent@npm:9.0.0"
+  dependencies:
+    agent-base: "npm:9.0.0"
+    debug: "npm:^4.3.4"
+  checksum: 10c0/1b55f3f79d60d5254f57afd888820e751cc28d39f4e19fd9fa098efa01ae74afcab315f02c6b067d9723fd49a0baf5eed1cde0a40a6a5bb397e3804cc81ac402
   languageName: node
   linkType: hard
 
@@ -4091,7 +4163,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"lint-staged@npm:^16.3.3":
+"lint-staged@npm:^16.4.0":
   version: 16.4.0
   resolution: "lint-staged@npm:16.4.0"
   dependencies:
@@ -5368,7 +5440,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"prettier@npm:^3.8.1":
+"prettier@npm:^3.8.3":
   version: 3.8.3
   resolution: "prettier@npm:3.8.3"
   bin:
@@ -5697,7 +5769,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"semantic-release@npm:^25.0.0":
+"semantic-release@npm:^25.0.3":
   version: 25.0.3
   resolution: "semantic-release@npm:25.0.3"
   dependencies:
@@ -6867,9 +6939,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"zod@npm:^3.25 || ^4.0, zod@npm:^4.3.6":
+"zod@npm:^3.25 || ^4.0":
   version: 4.4.1
   resolution: "zod@npm:4.4.1"
   checksum: 10c0/55714c4bea81f7851ac46bf9edfde7c63ed6677a6cc8971ed3a526a079de3ffbe2bd56160327d22e070f72854fc4485b98ab7373255b6b69d64d9067caec864e
+  languageName: node
+  linkType: hard
+
+"zod@npm:^4.4.3":
+  version: 4.4.3
+  resolution: "zod@npm:4.4.3"
+  checksum: 10c0/7ea31b558e88f9faf44f31dd185e2e1cbf51fed3081787fb96cc2534749b50c0acfc6da7f0922a7353ed092dd358c7d50c28ea96c94d04af64191bd33152eca3
   languageName: node
   linkType: hard

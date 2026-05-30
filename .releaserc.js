@@ -64,7 +64,7 @@ export default {
     [
       "@semantic-release/changelog",
       {
-        changelogFile: "CHANGELOG.md",
+        changelogFile: ".github/CHANGELOG.md",
         changelogTitle:
           "# Changelog\n\nAll notable changes to this project will be documented in this file. See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.",
       },
@@ -73,13 +73,13 @@ export default {
     [
       "@semantic-release/github",
       {
-        assets: [{ path: "CHANGELOG.md", label: "Changelog" }],
+        assets: [{ path: ".github/CHANGELOG.md", label: "Changelog" }],
       },
     ],
     [
       "@semantic-release/git",
       {
-        assets: ["CHANGELOG.md", "package.json"],
+        assets: [".github/CHANGELOG.md", "package.json"],
         message: "chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}",
       },
     ],
