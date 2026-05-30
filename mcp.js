@@ -9,6 +9,29 @@ import { checkEnv, copyEnv } from "./index.js";
 import packageJSON from "./package.json" with { type: 'json' };
 
 /**
+ * A `text`-only MCP tool result. The content element type comes from the SDK
+ * schema (`TextContent`) rather than being hand-rolled; the narrower `content`
+ * type (vs. the full `CallToolResult` union) reflects that these tools only
+ * ever emit text and keeps `.text` directly accessible. It stays assignable to
+ * `CallToolResult` at the `registerTool` boundary.
+ *
+ * @typedef {import("@modelcontextprotocol/sdk/types.js").TextContent} TextContent
+ * @typedef {{ content: TextContent[] }} TextResult
+ */
+
+/**
+ * Wrap a plain string in the MCP text-content result envelope. Centralizes the
+ * one content shape these tools emit so the `"text"` discriminant lives in a
+ * single place.
+ *
+ * @param {string} text
+ * @returns {TextResult}
+ */
+function textResult(text) {
+  return { content: [{ type: "text", text }] };
+}
+
+/**
  * Format an array of CopyEnvResults into a human-readable string.
  *
  * @param {import('./index.js').CopyEnvResult[]} results
@@ -72,8 +95,8 @@ const server = new McpServer({
 /**
  * MCP tool handler for copy_env. Extracted for testability.
  *
- * @param {{ dir?: string, force?: boolean, dry_run?: boolean, root_env_path?: string }} args
- * @returns {{ content: Array<{ type: string, text: string }> }}
+ * @param {{ dir?: string, force?: boolean, dry_run?: boolean, root_env_path?: string, skip_audit?: boolean }} [args]
+ * @returns {TextResult}
  */
 export function copyEnvToolHandler({ dir, force, dry_run, root_env_path, skip_audit } = {}) {
   const results = copyEnv(dir, {
@@ -83,23 +106,19 @@ export function copyEnvToolHandler({ dir, force, dry_run, root_env_path, skip_au
     skipAudit: skip_audit,
   });
 
-  return {
-    content: [{ type: "text", text: formatResults(results) }],
-  };
+  return textResult(formatResults(results));
 }
 
 /**
  * MCP tool handler for check_env. Extracted for testability.
  *
  * @param {{ dir?: string, root_env_path?: string }} [args]
- * @returns {{ content: Array<{ type: string, text: string }> }}
+ * @returns {TextResult}
  */
 export function checkEnvToolHandler({ dir, root_env_path } = {}) {
   const findings = checkEnv(dir, { rootEnvPath: root_env_path });
 
-  return {
-    content: [{ type: "text", text: formatCheckFindings(findings) }],
-  };
+  return textResult(formatCheckFindings(findings));
 }
 
 server.registerTool(

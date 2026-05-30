@@ -21,10 +21,6 @@ jobs:
     runs-on: ubuntu-latest
     env:
       CI: true
-      NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-      GITHUB_TOKEN: ${{ secrets.GH_PAC_TOKEN }}
-      GH_TOKEN: ${{ secrets.GH_PAC_TOKEN }}
     steps:
       - name: Check out code
         uses: actions/checkout@v6

@@ -14,6 +14,7 @@
 	},
 	"type": "module",
 	"main": "index.js",
+	"types": "types/index.d.ts",
 	"bin": {
 		"envoy": "cli.js",
 		"envoy-mcp": "mcp.js"
@@ -24,16 +25,19 @@
 		"LICENSE",
 		"index.js",
 		"cli.js",
-		"mcp.js"
+		"mcp.js",
+		"types"
 	],
 	"scripts": {
+		"build:types": "tsc -p tsconfig.types.json",
 		"coverage": "c8 yarn test",
-		"prepack": "pinst --disable",
+		"prepack": "yarn build:types && pinst --disable",
 		"precommit": "lint-staged",
 		"postinstall": "husky && envoy || true",
 		"postpack": "pinst --enable",
 		"release": "semantic-release",
-		"test": "ava"
+		"test": "ava",
+		"typecheck": "tsc -p jsconfig.json"
 	},
 	"dependencies": {
 		"@modelcontextprotocol/sdk": "^1.29.0",
@@ -50,6 +54,7 @@
 		"@semantic-release/github": "^12.0.8",
 		"@semantic-release/npm": "^13.1.5",
 		"@semantic-release/release-notes-generator": "^14.1.1",
+		"@types/node": "^25.9.1",
 		"ava": "^7.0.0",
 		"c8": "^11.0.0",
 		"eslint": "^10.4.1",
@@ -58,7 +63,8 @@
 		"pinst": "^3.0.0",
 		"prettier": "^3.8.3",
 		"prettier-package-json": "^2.8.0",
-		"semantic-release": "^25.0.3"
+		"semantic-release": "^25.0.3",
+		"typescript": "^6.0.3"
 	},
 	"keywords": [
 		"cli",
@@ -82,5 +88,5 @@
 			"url": "https://www.buymeacoffee.com/castastrophe"
 		}
 	],
-	"packageManager": "yarn@4.14.1"
+	"packageManager": "yarn@4.15.0"
 }

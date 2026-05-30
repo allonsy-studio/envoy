@@ -1,0 +1,10 @@
+{
+	"extends": "./jsconfig.json",
+	"compilerOptions": {
+		"noEmit": false,
+		"declaration": true,
+		"emitDeclarationOnly": true,
+		"outDir": "types"
+	},
+	"include": ["index.js", "cli.js", "mcp.js"]
+}

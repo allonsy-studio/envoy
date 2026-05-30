@@ -46,6 +46,16 @@ yarn prettier --check .
 
 If Prettier flags a file, run `yarn prettier --write .` to fix it automatically.
 
+### Type checking
+
+The source is plain JavaScript annotated with JSDoc and the `// @ts-check` pragma. TypeScript's compiler checks those types — no build step, no `.ts` files. CI runs this on every push, and you can run it locally:
+
+```sh
+yarn typecheck
+```
+
+Consumer-facing type declarations (`types/*.d.ts`) are generated from the same JSDoc at publish time via `yarn build:types`; they are not committed.
+
 ### Commit messages
 
 This project uses [Conventional Commits](https://www.conventionalcommits.org/). Commit messages are linted automatically on every commit — a malformed message will be rejected. The format is:

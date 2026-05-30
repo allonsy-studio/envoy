@@ -36,6 +36,9 @@ node_modules/
 # publish directory
 dist
 
+# generated type declarations (emitted at pack time)
+types
+
 .DS_Store
 
 # yarn
