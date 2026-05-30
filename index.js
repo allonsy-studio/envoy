@@ -220,19 +220,33 @@ export function isPlaceholderValue(value) {
   return PLACEHOLDER_PATTERNS.some((re) => re.test(v));
 }
 
-/** Keys whose name signals the value is meant to be secret. */
-const SECRET_KEY_RE =
-  /(^|_)(KEY|SECRET|TOKEN|PASSWORD|PASSWD|PWD|CREDENTIALS?|PRIVATE|AUTH)$/i;
+/**
+ * Whole words (between `_`/`-` separators) that mark a key as holding a secret.
+ * Matching on delimited tokens — rather than a substring — flags `SECRET_KEY_BASE`
+ * and `AWS_ACCESS_KEY_ID` while leaving `KEYBOARD_LAYOUT` and `MONKEY_BUSINESS`
+ * alone.
+ */
+const SECRET_KEY_WORDS = new Set([
+  "KEY", "KEYS", "APIKEY", "APIKEYS",
+  "SECRET", "SECRETS",
+  "TOKEN", "TOKENS",
+  "PASSWORD", "PASSWD", "PASSPHRASE", "PWD",
+  "CREDENTIAL", "CREDENTIALS",
+  "PRIVATE", "AUTH",
+]);
 
 /**
  * Whether a key name looks like it should hold a secret (e.g. `*_KEY`,
- * `*_SECRET`, `*_TOKEN`, `*_PASSWORD`).
+ * `*_SECRET`, `*_TOKEN`, `*_PASSWORD`, `APIKEY`, `SECRET_KEY_BASE`).
  *
  * @param {string} key
  * @returns {boolean}
  */
 export function isSecretShapedKey(key) {
-  return SECRET_KEY_RE.test(key);
+  return key
+    .toUpperCase()
+    .split(/[_-]+/)
+    .some((token) => SECRET_KEY_WORDS.has(token));
 }
 
 /**

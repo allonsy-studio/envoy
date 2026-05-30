@@ -3,6 +3,7 @@
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 import test from "ava";
 
@@ -694,14 +695,18 @@ test("scanContent: heuristic does not apply to non-env files", (t) => {
   t.is(findings.length, 0);
 });
 
-test("scanContent: known-secret takes precedence over heuristic (one per key)", (t) => {
+test("scanContent: a key that is both known and secret-shaped yields one known-secret finding", (t) => {
+  // STRIPE_SECRET_KEY is both secret-shaped *and* a known value — it must
+  // surface once as known-secret, not twice. API_KEY is secret-shaped but its
+  // value is a placeholder, so it must not be flagged at all.
   const secret = "sk_live_4eC39HqLyjWDarjtT1zdp7dc";
   const findings = scanContent(
     "/p/.env.example",
-    `STRIPE_SECRET_KEY=${secret}\n`,
+    `STRIPE_SECRET_KEY=${secret}\nAPI_KEY=<placeholder>\n`,
     new Map([[secret, "STRIPE_SECRET_KEY"]]),
   );
   t.is(findings.length, 1);
+  t.is(findings[0].key, "STRIPE_SECRET_KEY");
   t.is(findings[0].kind, "known-secret");
 });
 
@@ -834,17 +839,333 @@ test("formatCheckFindings: describes a secret-shaped finding", (t) => {
 
 // ─── checkEnvToolHandler (MCP) ─────────────────────────────────────────────────
 
-test("checkEnvToolHandler: returns MCP content structure", (t) => {
+test("checkEnvToolHandler: reports a finding through the real git path", (t) => {
+  const dir = tmpGitDir({ gitignore: ".env\n" });
+  try {
+    const git = (/** @type {string[]} */ args) =>
+      spawnSync("git", args, { cwd: dir });
+    const rootEnv = path.join(dir, "root.env");
+    const secret = "sk_live_4eC39HqLyjWDarjtT1zdp7dc";
+    fs.writeFileSync(rootEnv, `STRIPE_SECRET_KEY=${secret}\n`);
+    fs.writeFileSync(path.join(dir, ".env.example"), `STRIPE_SECRET_KEY=${secret}\n`);
+    git(["add", ".env.example"]);
+    const { content } = checkEnvToolHandler({ dir, root_env_path: rootEnv });
+    t.is(content[0].type, "text");
+    t.true(content[0].text.includes("Possible secret detected"));
+    t.true(content[0].text.includes("STRIPE_SECRET_KEY"));
+  } finally {
+    cleanup(dir);
+  }
+});
+
+test("checkEnvToolHandler: clean repo returns the no-findings message", (t) => {
   const dir = tmpDir();
   try {
     const { content } = checkEnvToolHandler({
       dir,
       root_env_path: "/nonexistent/.env",
     });
-    t.true(Array.isArray(content));
     t.is(content[0].type, "text");
-    t.true(typeof content[0].text === "string");
+    t.is(content[0].text, "No leaked secrets detected.");
   } finally {
     cleanup(dir);
+  }
+});
+
+// ─── shared fixtures for git/CLI integration ──────────────────────────────────
+
+const CLI = fileURLToPath(new URL("./cli.js", import.meta.url));
+const LIVE_SECRET = "sk_live_4eC39HqLyjWDarjtT1zdp7dc";
+
+/** Run the real CLI binary in `dir`. Returns the spawnSync result. */
+function runCli(/** @type {string} */ dir, /** @type {string[]} */ args) {
+  return spawnSync(process.execPath, [CLI, ...args], {
+    cwd: dir,
+    encoding: "utf8",
+  });
+}
+
+/** git command bound to a directory. */
+const gitIn = (/** @type {string} */ dir) => (/** @type {string[]} */ args) =>
+  spawnSync("git", args, { cwd: dir });
+
+// ─── cli.js --check exit-code contract ────────────────────────────────────────
+// The pre-commit/CI promise lives entirely in the exit code, so it is pinned
+// here against the real binary rather than only the library functions.
+
+test("cli --check: exits 0 and silent when staged files are clean", (t) => {
+  const dir = tmpGitDir({ gitignore: ".env\n" });
+  try {
+    const git = gitIn(dir);
+    const rootEnv = path.join(dir, "root.env");
+    fs.writeFileSync(rootEnv, `STRIPE_SECRET_KEY=${LIVE_SECRET}\n`);
+    fs.writeFileSync(path.join(dir, ".env.example"), "STRIPE_SECRET_KEY=sk_test_placeholder\n");
+    git(["add", ".env.example"]);
+    const { status, stdout, stderr } = runCli(dir, ["--check", "--root", rootEnv]);
+    t.is(status, 0);
+    t.is(stdout.trim(), "");
+    t.is(stderr.trim(), "");
+  } finally {
+    cleanup(dir);
+  }
+});
+
+test("cli --check: exits 1 and reports when a staged file leaks a known secret", (t) => {
+  const dir = tmpGitDir({ gitignore: ".env\n" });
+  try {
+    const git = gitIn(dir);
+    const rootEnv = path.join(dir, "root.env");
+    fs.writeFileSync(rootEnv, `STRIPE_SECRET_KEY=${LIVE_SECRET}\n`);
+    fs.writeFileSync(path.join(dir, ".env.example"), `STRIPE_SECRET_KEY=${LIVE_SECRET}\n`);
+    git(["add", ".env.example"]);
+    const { status, stderr } = runCli(dir, ["--check", "--root", rootEnv]);
+    t.is(status, 1);
+    t.true(stderr.includes("Possible secret detected"));
+    t.true(stderr.includes("STRIPE_SECRET_KEY"));
+    // read-only: --check must never write a .env
+    t.false(fs.existsSync(path.join(dir, ".env")));
+  } finally {
+    cleanup(dir);
+  }
+});
+
+test("cli --check: exits 1 on a secret-shaped key when no root env exists", (t) => {
+  const dir = tmpGitDir({ gitignore: ".env\n" });
+  try {
+    const git = gitIn(dir);
+    fs.writeFileSync(path.join(dir, ".env.example"), "API_KEY=a1b2c3d4e5f6g7h8\n");
+    git(["add", ".env.example"]);
+    const { status, stderr } = runCli(dir, ["--check", "--root", path.join(dir, "nope.env")]);
+    t.is(status, 1);
+    t.true(stderr.includes("API_KEY"));
+  } finally {
+    cleanup(dir);
+  }
+});
+
+test("cli --check: exits 0 outside a git repository", (t) => {
+  const dir = tmpDir();
+  try {
+    const rootEnv = path.join(dir, "root.env");
+    fs.writeFileSync(rootEnv, `STRIPE_SECRET_KEY=${LIVE_SECRET}\n`);
+    const { status } = runCli(dir, ["--check", "--root", rootEnv]);
+    t.is(status, 0);
+  } finally {
+    cleanup(dir);
+  }
+});
+
+test("cli (copy): exits 1 and blocks when .env is tracked by git", (t) => {
+  const dir = tmpGitDir({ gitignore: "*.log\n" });
+  try {
+    const git = gitIn(dir);
+    const rootEnv = path.join(dir, "root.env");
+    fs.writeFileSync(rootEnv, "");
+    fs.writeFileSync(path.join(dir, ".env"), "SECRET=tracked\n");
+    git(["add", ".env"]);
+    git(["commit", "-m", "accidentally commit .env"]);
+    fs.writeFileSync(path.join(dir, ".env.example"), "SECRET=example\n");
+    fs.rmSync(path.join(dir, ".env"));
+    const { status, stderr } = runCli(dir, ["--root", rootEnv]);
+    t.is(status, 1);
+    t.true(stderr.includes("Blocked"));
+    t.false(fs.existsSync(path.join(dir, ".env")));
+  } finally {
+    cleanup(dir);
+  }
+});
+
+// ─── checkEnv end-to-end through git (no files override) ──────────────────────
+// The library tests above inject `files`; these exercise the real production
+// path checkEnv → filesToScan → git.
+
+test("checkEnv: flags a staged file via the real git path", (t) => {
+  const dir = tmpGitDir({ gitignore: ".env\n" });
+  try {
+    const git = gitIn(dir);
+    const rootEnv = path.join(dir, "root.env");
+    fs.writeFileSync(rootEnv, `STRIPE_SECRET_KEY=${LIVE_SECRET}\n`);
+    fs.writeFileSync(path.join(dir, ".env.example"), `STRIPE_SECRET_KEY=${LIVE_SECRET}\n`);
+    git(["add", ".env.example"]);
+    const findings = checkEnv(dir, { rootEnvPath: rootEnv });
+    t.is(findings.length, 1);
+    t.is(findings[0].kind, "known-secret");
+  } finally {
+    cleanup(dir);
+  }
+});
+
+test("checkEnv: does NOT flag a gitignored real .env (core safety claim)", (t) => {
+  const dir = tmpGitDir({ gitignore: ".env\n" });
+  try {
+    const git = gitIn(dir);
+    const rootEnv = path.join(dir, "root.env");
+    fs.writeFileSync(rootEnv, `STRIPE_SECRET_KEY=${LIVE_SECRET}\n`);
+    // The real secret lives in a gitignored .env — it must never be scanned.
+    fs.writeFileSync(path.join(dir, ".env"), `STRIPE_SECRET_KEY=${LIVE_SECRET}\n`);
+    // The tracked template carries only a placeholder.
+    fs.writeFileSync(path.join(dir, ".env.example"), "STRIPE_SECRET_KEY=sk_test_placeholder\n");
+    git(["add", ".env.example"]);
+    const findings = checkEnv(dir, { rootEnvPath: rootEnv });
+    t.deepEqual(findings, []);
+  } finally {
+    cleanup(dir);
+  }
+});
+
+test("checkEnv: all-tracked fallback flags a committed leak when nothing is staged", (t) => {
+  const dir = tmpGitDir({ gitignore: ".env\n" });
+  try {
+    const git = gitIn(dir);
+    const rootEnv = path.join(dir, "root.env");
+    fs.writeFileSync(rootEnv, `STRIPE_SECRET_KEY=${LIVE_SECRET}\n`);
+    fs.writeFileSync(path.join(dir, ".env.example"), `STRIPE_SECRET_KEY=${LIVE_SECRET}\n`);
+    git(["add", ".env.example"]);
+    git(["commit", "-m", "leak"]); // committed, so nothing is staged
+    const findings = checkEnv(dir, { rootEnvPath: rootEnv });
+    t.is(findings.length, 1);
+    t.is(findings[0].kind, "known-secret");
+  } finally {
+    cleanup(dir);
+  }
+});
+
+test("checkEnv: aggregates findings across multiple staged files", (t) => {
+  const dir = tmpGitDir({ gitignore: ".env\n" });
+  try {
+    const git = gitIn(dir);
+    const rootEnv = path.join(dir, "root.env");
+    const gh = "ghp_16C7e42F292c6912E7710c838347Ae178B4a";
+    fs.writeFileSync(rootEnv, `STRIPE_SECRET_KEY=${LIVE_SECRET}\nGITHUB_TOKEN=${gh}\n`);
+    fs.writeFileSync(path.join(dir, ".env.example"), `STRIPE_SECRET_KEY=${LIVE_SECRET}\n`);
+    fs.mkdirSync(path.join(dir, "svc"));
+    fs.writeFileSync(path.join(dir, "svc", "config.json"), `{ "gh": "${gh}" }`);
+    git(["add", ".env.example", "svc/config.json"]);
+    const findings = checkEnv(dir, { rootEnvPath: rootEnv });
+    t.is(findings.length, 2);
+    t.deepEqual(
+      findings.map((f) => f.key).sort(),
+      ["GITHUB_TOKEN", "STRIPE_SECRET_KEY"],
+    );
+  } finally {
+    cleanup(dir);
+  }
+});
+
+test("checkEnv: is read-only — leaves the working tree untouched", (t) => {
+  const dir = tmpGitDir({ gitignore: ".env\n" });
+  try {
+    const git = gitIn(dir);
+    const rootEnv = path.join(dir, "root.env");
+    fs.writeFileSync(rootEnv, `STRIPE_SECRET_KEY=${LIVE_SECRET}\n`);
+    fs.writeFileSync(path.join(dir, ".env.example"), `STRIPE_SECRET_KEY=${LIVE_SECRET}\n`);
+    git(["add", ".env.example"]);
+    const before = fs.readdirSync(dir).sort();
+    checkEnv(dir, { rootEnvPath: rootEnv });
+    t.deepEqual(fs.readdirSync(dir).sort(), before);
+  } finally {
+    cleanup(dir);
+  }
+});
+
+// ─── real-world secret-format corpus ──────────────────────────────────────────
+// The professional bar for a secret scanner: validate against the formats that
+// actually leak, and against the example/placeholder shapes that must not trip.
+
+const REAL_SECRET_FORMATS = [
+  ["AWS access key id", "AKIA1234567890ABCDEF"],
+  ["AWS secret access key", "wJalrXUtnFEMIbPxRfiCYz9aBcDeFgHiJkLmNoPq"],
+  ["GitHub PAT (classic)", "ghp_16C7e42F292c6912E7710c838347Ae178B4a"],
+  ["GitHub fine-grained PAT", "github_pat_11ABCDEFG0aBcDeFgHiJkLmNoPqRsTuVwXyZ12"],
+  ["Slack-style token (synthetic)", "xoxb-0000-synthetic-fixture-not-a-real-token-0000"],
+  ["Google API key", "AIzaSyA1B2C3D4E5F6G7H8I9J0KLMNOPQRSTUVwx"],
+  ["OpenAI key", "sk-AbCdEf1234567890GhIjKlMnOpQrStUvWxYz"],
+  ["Stripe live key", "sk_live_4eC39HqLyjWDarjtT1zdp7dc"],
+  ["JWT", "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.dozjgNryP4J3jVmNHl0w5N"],
+  ["hex digest", "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b"],
+  ["base64 blob", "c2VjcmV0LXZhbHVlLXRoYXQtaXMtZmFpcmx5LWxvbmc="],
+];
+
+for (const [label, value] of REAL_SECRET_FORMATS) {
+  test(`isPlaceholderValue: ${label} is treated as a real secret`, (t) => {
+    t.false(isPlaceholderValue(value), value);
+  });
+}
+
+const PLACEHOLDER_FORMATS = [
+  ["Stripe test key", "sk_test_placeholderkey"],
+  ["angle-bracket", "<your-api-key>"],
+  ["your_ prefix + _here", "your_token_here"],
+  ["changeme", "changeme"],
+  ["change-me phrase", "change-me-please"],
+  ["x run", "xxxxxxxx"],
+  ["zero run", "00000000"],
+  ["dash run", "--------"],
+  ["template braces", "{{ APP_SECRET }}"],
+  ["literal placeholder", "placeholder"],
+  ["example value", "example-value"],
+  ["redacted", "REDACTED"],
+  ["too short", "abc"],
+];
+
+for (const [label, value] of PLACEHOLDER_FORMATS) {
+  test(`isPlaceholderValue: ${label} is treated as a placeholder`, (t) => {
+    t.true(isPlaceholderValue(value), value);
+  });
+}
+
+const DETECT_CORPUS = [
+  ["AWS_SECRET_ACCESS_KEY", "wJalrXUtnFEMIbPxRfiCYz9aBcDeFgHiJkLmNoPq"],
+  ["GITHUB_TOKEN", "ghp_16C7e42F292c6912E7710c838347Ae178B4a"],
+  ["OPENAI_API_KEY", "sk-AbCdEf1234567890GhIjKlMnOpQrStUvWxYz"],
+  ["STRIPE_SECRET_KEY", "sk_live_4eC39HqLyjWDarjtT1zdp7dc"],
+];
+
+for (const [key, value] of DETECT_CORPUS) {
+  test(`scanContent: detects a leaked ${key} value (plain and quoted)`, (t) => {
+    const secretValues = new Map([[value, key]]);
+    const plain = scanContent("/p/.env.example", `${key}=${value}\n`, secretValues);
+    t.is(plain.length, 1);
+    t.is(plain[0].kind, "known-secret");
+    const quoted = scanContent("/p/config.json", `{ "k": "${value}" }`, secretValues);
+    t.is(quoted.length, 1);
+    t.is(quoted[0].kind, "known-secret");
+  });
+}
+
+// ─── isPlaceholderValue boundaries ────────────────────────────────────────────
+
+test("isPlaceholderValue: length threshold is 8 characters", (t) => {
+  t.true(isPlaceholderValue("1234567")); // 7 → placeholder
+  t.false(isPlaceholderValue("12345678")); // 8 → real
+});
+
+// ─── isSecretShapedKey blind-spot coverage ────────────────────────────────────
+
+test("isSecretShapedKey: matches compound and concatenated secret keys", (t) => {
+  for (const k of [
+    "SECRET_KEY_BASE",
+    "AWS_ACCESS_KEY_ID",
+    "APIKEY",
+    "PASSPHRASE",
+    "ACCESS_TOKEN",
+    "OAUTH_CLIENT_SECRET",
+    "X-Auth-Token",
+  ]) {
+    t.true(isSecretShapedKey(k), k);
+  }
+});
+
+test("isSecretShapedKey: ignores lookalikes that merely contain a secret word", (t) => {
+  for (const k of [
+    "KEYBOARD_LAYOUT",
+    "MONKEY_BUSINESS",
+    "TURKEY",
+    "DATABASE_URL",
+    "PUBLIC_URL",
+    "PORT",
+    "NODE_ENV",
+  ]) {
+    t.false(isSecretShapedKey(k), k);
   }
 });
