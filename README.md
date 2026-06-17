@@ -330,7 +330,7 @@ Follow along or share your ideas in the [roadmap discussion](https://github.com/
 
 ## License
 
-[Apache 2.0](./LICENSE) © [Cassondra Roberts](https://allons-y.llc)
+[Apache 2.0](./LICENSE) © [Cassondra Roberts](https://allons-y.studio)
 
 [github-image]: https://github.com/Allons-y-Studio/envoy/actions/workflows/test.yml/badge.svg?branch=main
 [github-url]: https://github.com/Allons-y-Studio/envoy/actions/workflows/test.yml
