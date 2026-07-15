@@ -7,6 +7,7 @@
 
 <!-- weaver:banner:END -->
 
+<p></p>
 <div align="center">
   <img width="250" src="https://github.com/Allons-y-Studio/envoy/blob/main/logo-envoy.png?raw=true">
 </div>
