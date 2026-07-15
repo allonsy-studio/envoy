@@ -1,3 +1,6 @@
+<!-- weaver:banner:START -->
+<!-- weaver:banner:END -->
+
 <div align="center">
   <img width="250" src="https://github.com/Allons-y-Studio/envoy/blob/main/logo-envoy.png?raw=true">
 </div>
@@ -323,6 +326,9 @@ No network calls. No config files. No global state.
 Envoy is intentionally minimal today — it does one thing and does it well. The bigger vision is to make it the single tool that bridges your personal secrets and every project you work in, without friction or foot-guns. That means smarter value handling, better control over what gets scanned and where, and tighter integration with the safety checks developers already rely on.
 
 Follow along or share your ideas in the [roadmap discussion](https://github.com/Allons-y-Studio/envoy/discussions/12).
+
+<!-- weaver:footer:START -->
+<!-- weaver:footer:END -->
 
 ## Requirements
 
