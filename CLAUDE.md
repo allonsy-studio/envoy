@@ -50,7 +50,7 @@ the release notes — write it for a human reader.
 
 - Subject: `<type>(<optional-scope>): <imperative subject>` — lowercase, ≤100
   chars, no trailing period. Types: feat, fix, docs, chore, refactor, test, …
-- Body: plain prose, wrapped ~72–80 chars — what changed and why it matters;
+- Body: plain prose, not wrapped, 1-2 sentences, <80 chars — what changed and why it matters;
   for feature commits, also how it behaves and how edge cases are handled.
   Small commits may collapse to subject + one line + footer (`Closes #N`).
 - PRs are squash-merged, so the PR title must itself be a valid conventional
