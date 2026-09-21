@@ -9,7 +9,7 @@
 
 <p></p>
 <div align="center">
-  <img width="250" alt="" src="https://github.com/Allons-y-Studio/envoy/blob/main/logo-envoy.png?raw=true">
+  <img width="250" alt="A cartoon of a young boy with dark hair, wearing a beret and carrying an envelope" src="https://github.com/Allons-y-Studio/envoy/blob/main/logo-envoy.png?raw=true">
 </div>
 <h1 align="center">Envoy</h1>
 <p align="center">
