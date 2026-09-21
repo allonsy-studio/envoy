@@ -55,5 +55,5 @@ the release notes — write it for a human reader.
   Small commits may collapse to subject + one line + footer (`Closes #N`).
 - PRs are squash-merged, so the PR title must itself be a valid conventional
   commit subject; the PR body should cover what/why and note test coverage.
-- Do NOT append "Generated with Claude Code" / Co-Authored-By footers to
-  commits or PRs.
+- Never add AI attribution to a commit or a PR: no `Co-Authored-By` trailer, no
+  "Generated with …" footer, no session URLs.
