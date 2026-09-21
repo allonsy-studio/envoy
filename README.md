@@ -9,7 +9,7 @@
 
 <p></p>
 <div align="center">
-  <img width="250" src="https://github.com/Allons-y-Studio/envoy/blob/main/logo-envoy.png?raw=true">
+  <img width="250" alt="A cartoon of a young boy with dark hair, wearing a beret and carrying an envelope" src="https://github.com/Allons-y-Studio/envoy/blob/main/logo-envoy.png?raw=true">
 </div>
 <h1 align="center">Envoy</h1>
 <p align="center">
@@ -215,7 +215,7 @@ When run, envoy:
 3. Reports any file containing a verbatim copy of a known secret and exits non-zero
 4. Exits **zero, silently** when nothing is wrong — CI- and pre-commit-friendly
 
-```
+```text
 ⚠ Possible secret detected in .env.example:
   STRIPE_SECRET_KEY contains a value matching your local ~/.env
 ```
@@ -250,7 +250,7 @@ Every time envoy writes a `.env` file it runs two git safety checks automaticall
 
 **1. Git tracking check** — if `.env` is already committed to the repository, envoy refuses to overwrite it and exits with a non-zero code:
 
-```
+```text
 🚨 Blocked /your/project/.env — this file is tracked by git. Remove it from
    version control before proceeding:
    git rm --cached /your/project/.env
@@ -260,7 +260,7 @@ Writing secrets into a tracked file would put them one `git push` away from expo
 
 **2. Gitignore check** — if `.env` is not covered by any `.gitignore` rule, envoy writes the file but prints a warning:
 
-```
+```text
 ⚠️  /your/project/.env is not covered by .gitignore — add it to prevent
     accidentally committing secrets
 ```
