@@ -4,7 +4,7 @@ Single-package Node CLI / library / MCP server (`@allons-y/envoy`). Copies value
 from a root `~/.env` into project `.env` files using each `.env.example` as the
 template, and provides a read-only `envoy --check` gate that blocks real secrets
 from being committed. Local-first by design: no network calls, no config files,
-no telemetry: keep it that way.
+no telemetry. Keep it that way.
 
 ## Layout
 
@@ -30,13 +30,13 @@ Yarn 4 (see `packageManager` in package.json), Node >= 24, ESM only.
   Published type definitions are generated from the JSDoc, so keep annotations
   on exported functions accurate and complete; `yarn typecheck` must pass.
 - DO: keep code self-documenting. When a comment is needed, keep it brief and
-  explain only the "why" the code can't show: never restate what the code does.
+  explain only the "why" the code can't show; never restate what the code does.
 - Every exported function gets tests in `test.js`. Tests use real temp
   directories and real git repos (see the `tmpDir` / `tmpGitDir` helpers), not
-  mocks: follow that pattern.
+  mocks. Follow that pattern.
 - Don't add dependencies casually; the project's pitch is small, auditable, and
   dependency-light.
-- README.md: never edit between `weaver:*:START` / `weaver:*:END` markers:
+- README.md: never edit between `weaver:*:START` / `weaver:*:END` markers;
   those blocks are auto-generated and synced by Weaver.
 - Husky hooks run automatically: pre-commit → lint-staged (eslint --fix on
   js/json, prettier on markdown); commit-msg → commitlint.
@@ -46,7 +46,7 @@ Yarn 4 (see `packageManager` in package.json), Node >= 24, ESM only.
 Conventional Commits, enforced by commitlint. semantic-release runs on `main`:
 the commit type drives the version bump (`feat` → minor, `fix` → patch,
 `BREAKING CHANGE:` footer → major) and the commit body is lifted verbatim into
-the release notes: write it for a human reader.
+the release notes. Write it for a human reader.
 
 - Subject: `<type>(<optional-scope>): <imperative subject>`, lowercase, ≤100
   chars, no trailing period. Types: feat, fix, docs, chore, refactor, test, …
