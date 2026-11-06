@@ -357,8 +357,8 @@ Follow along or share your ideas in the [roadmap discussion](https://github.com/
 
 [Apache 2.0](./LICENSE) © [Cassondra Roberts](https://allons-y.studio)
 
-[github-image]: https://github.com/Allons-y-Studio/envoy/actions/workflows/test.yml/badge.svg?branch=main
-[github-url]: https://github.com/Allons-y-Studio/envoy/actions/workflows/test.yml
+[github-image]: https://github.com/Allons-y-Studio/envoy/actions/workflows/ci.yml/badge.svg?branch=main
+[github-url]: https://github.com/Allons-y-Studio/envoy/actions/workflows/ci.yml
 [npm-image]: https://img.shields.io/npm/v/@allons-y/envoy.svg
 [npm-url]: https://www.npmjs.com/package/@allons-y/envoy
 [coverage-image]: https://img.shields.io/nycrc/Allons-y-Studio/envoy
