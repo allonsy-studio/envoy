@@ -5,11 +5,8 @@ on:
     branches:
       - main
 
-permissions:
-  contents: write
-  issues: write
-  pull-requests: write
-  id-token: write
+concurrency:
+  group: release-${{ github.ref }}
 
 defaults:
   run:
@@ -19,14 +16,25 @@ jobs:
   release:
     name: Release
     runs-on: ubuntu-latest
-    env:
-      CI: true
+    permissions:
+      contents: write
+      pull-requests: write
+      id-token: write
     steps:
+      - name: Create GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ secrets.APP_CLIENT_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+          permission-contents: write
+          permission-pull-requests: write
+
       - name: Check out code
         uses: actions/checkout@v6
         with:
           fetch-depth: 0
-          persist-credentials: false
+          token: ${{ steps.app-token.outputs.token }}
 
       - name: Enable Corepack
         run: corepack enable
@@ -41,10 +49,14 @@ jobs:
       - name: Install dependencies
         run: yarn install --immutable
 
-      - name: Semantic release
-        uses: cycjimmy/semantic-release-action@v6.0.0
+      - name: Create release PR or publish to npm
+        uses: changesets/action@v1
+        with:
+          version: yarn run version
+          publish: yarn release
+          title: "chore(release): version packages"
+          commit: "chore(release): version packages"
+          commitMode: github-api
+          createGithubReleases: false
         env:
-          GIT_AUTHOR_NAME: Cassondra Roberts
-          GIT_AUTHOR_EMAIL: castastrophe@users.noreply.github.com
-          GIT_COMMITTER_NAME: Cassondra Roberts
-          GIT_COMMITTER_EMAIL: castastrophe@users.noreply.github.com
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}

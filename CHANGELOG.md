@@ -1,8 +1,6 @@
 # Changelog
 
-All notable changes to this project will be documented in this file. See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
-
-## [1.1.0](https://github.com/castastrophe/envoy/compare/v1.0.0...v1.1.0) (2026-03-26)
+## 1.1.0 (2026-03-26)
 
 ### ✨ Features
 
@@ -19,7 +17,7 @@ Both checks use git's own plumbing (check-ignore, ls-files) so nested
 gitignores, global ignores, and .git/info/exclude are all respected.
 Use --skip-audit / skip_audit to opt out in non-git environments.
 
-## [1.0.0](https://github.com/castastrophe/envoy/releases/tag/v1.0.0) (2026-03-26)
+## 1.0.0 (2026-03-26)
 
 ### ✨ Features
 

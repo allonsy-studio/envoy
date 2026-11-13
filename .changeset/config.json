@@ -1,0 +1,17 @@
+{
+	"$schema": "https://unpkg.com/@changesets/config@3.1.4/schema.json",
+	"changelog": [
+		"@allons-y/opx-release/changelog",
+		{
+			"repo": "allonsy-studio/envoy",
+			"releaseDate": true
+		}
+	],
+	"commit": false,
+	"fixed": [],
+	"linked": [],
+	"access": "public",
+	"updateInternalDependencies": "patch",
+	"ignore": [],
+	"baseBranch": "main"
+}
