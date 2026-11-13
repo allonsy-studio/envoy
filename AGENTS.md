@@ -43,10 +43,12 @@ Yarn 4 (see `packageManager` in package.json), Node >= 24, ESM only.
 
 ## Commits and pull requests
 
-Conventional Commits, enforced by commitlint. semantic-release runs on `main`:
-the commit type drives the version bump (`feat` → minor, `fix` → patch,
-`BREAKING CHANGE:` footer → major) and the commit body is lifted verbatim into
-the release notes. Write it for a human reader.
+Conventional Commits, enforced by commitlint. The commit type no longer sets the
+version: add a changeset (`yarn changeset`) for any change a user would notice,
+choosing the bump (`patch` → fix, `minor` → feature, `major` → breaking). Its
+summary becomes the changelog entry, so write it for a human reader. Releases run
+on `main` through `opx release`: it opens a version PR, and merging that PR
+publishes to npm, tags, and creates the GitHub release.
 
 - Subject: `<type>(<optional-scope>): <imperative subject>`, lowercase, ≤100
   chars, no trailing period. Types: feat, fix, docs, chore, refactor, test, …
