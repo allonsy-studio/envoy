@@ -3,10 +3,12 @@
 	"baseBranchPatterns": ["main"],
 	"extends": [
 		"config:recommended",
+		"helpers:pinGitHubActionDigests",
 		":widenPeerDependencies",
 		"group:githubArtifactActions"
 	],
 	"labels": [],
+	"osvVulnerabilityAlerts": true,
 	"packageRules": [
 		{
 			"matchDatasources": ["npm"],
@@ -19,7 +21,7 @@
 			"matchPackageNames": ["changesets/action"]
 		}
 	],
-	"rebaseWhen": "behind-base-branch",
+	"rebaseWhen": "conflicted",
 	"reviewers": ["castastrophe"],
 	"lockFileMaintenance": {
 		"enabled": true,
