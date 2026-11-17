@@ -55,8 +55,8 @@ publishes to npm, tags, and creates the GitHub release.
 - Body: plain prose, not wrapped, 1-2 sentences, <80 chars, covering what changed and why it matters;
   for feature commits, also how it behaves and how edge cases are handled.
   Small commits may collapse to subject + one line + footer (`Closes #N`).
-- PRs are squash-merged, so the PR title must itself be a valid conventional
-  commit subject; the PR body should cover what/why and note test coverage.
+- PRs are squash-merged with the PR title as the commit subject & the commit
+  messages as its body, so the title must be a valid conventional commit subject; the PR body should cover what/why and note test coverage.
 - Never add AI attribution to a commit or a PR: no `Co-Authored-By` trailer, no
   "Generated with …" footer, no session URLs.
 
